@@ -67,10 +67,9 @@ class EcsServerGroupCreator implements ServerGroupCreator, DeploymentDetailsAwar
 
         if (operation.evaluateTaskDefinitionArtifactExpressions) {
           Response artifactText = oortService.fetchArtifact(operation.resolvedTaskDefinitionArtifact);
-          InputStream body = artifactText.getBody().in()
           log.info(
               "Unevaluated Artifact body {}",
-              body.getText())
+              artifactText.getReason())
         }
       } else {
         throw new IllegalStateException("No task definition artifact found in context for operation.")
