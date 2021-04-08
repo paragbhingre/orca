@@ -19,18 +19,23 @@ package com.netflix.spinnaker.orca.clouddriver.tasks.providers.ecs
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.netflix.spinnaker.kork.artifacts.model.Artifact
 import com.netflix.spinnaker.orca.api.pipeline.models.StageExecution
+import com.netflix.spinnaker.orca.clouddriver.OortService
 import com.netflix.spinnaker.orca.clouddriver.tasks.servergroup.ServerGroupCreator
 import com.netflix.spinnaker.orca.kato.tasks.DeploymentDetailsAware
 import com.netflix.spinnaker.orca.pipeline.model.DockerTrigger
 import com.netflix.spinnaker.orca.api.pipeline.models.ExecutionType
 import com.netflix.spinnaker.orca.pipeline.util.ArtifactUtils
 import groovy.util.logging.Slf4j
+import org.springframework.beans.factory.annotation.Autowired
+import retrofit.client.Response
+
 import javax.annotation.Nullable
 import org.springframework.stereotype.Component
 
 @Slf4j
 @Component
 class EcsServerGroupCreator implements ServerGroupCreator, DeploymentDetailsAware {
+  final private OortService oortService
 
   final String cloudProvider = "ecs"
   final boolean katoResultExpected = false
@@ -40,8 +45,10 @@ class EcsServerGroupCreator implements ServerGroupCreator, DeploymentDetailsAwar
   final ObjectMapper mapper = new ObjectMapper()
   final ArtifactUtils artifactUtils
 
-  EcsServerGroupCreator(ArtifactUtils artifactUtils) {
+  @Autowired
+  EcsServerGroupCreator(OortService oort, ArtifactUtils artifactUtils) {
     this.artifactUtils = artifactUtils
+    this.oortService = oort
   }
 
   @Override
@@ -57,6 +64,13 @@ class EcsServerGroupCreator implements ServerGroupCreator, DeploymentDetailsAwar
     if (operation.useTaskDefinitionArtifact) {
       if (operation.taskDefinitionArtifact) {
         operation.resolvedTaskDefinitionArtifact = getTaskDefArtifact(stage, operation.taskDefinitionArtifact)
+
+        if (operation.evaluateTaskDefinitionArtifactExpressions) {
+          Response artifactText = oortService.fetchArtifact(operation.resolvedTaskDefinitionArtifact);
+          log.info(
+              "Unevaluated Artifact body {}",
+              artifactText.getReason())
+        }
       } else {
         throw new IllegalStateException("No task definition artifact found in context for operation.")
       }
