@@ -16,6 +16,9 @@
 package com.netflix.spinnaker.orca.clouddriver.tasks.providers.ecs
 
 import com.google.common.collect.Maps
+import com.netflix.spinnaker.kork.core.RetrySupport
+import com.netflix.spinnaker.orca.clouddriver.OortService
+import com.netflix.spinnaker.orca.pipeline.util.ContextParameterProcessor
 import spock.lang.Specification
 import spock.lang.Subject
 import com.netflix.spinnaker.kork.artifacts.model.Artifact
@@ -29,6 +32,8 @@ class EcsServerGroupCreatorSpec extends Specification {
   @Subject
   ArtifactUtils mockResolver
   EcsServerGroupCreator creator
+  OortService oortService = Mock()
+  ContextParameterProcessor contextParameterProcessor = Mock()
   def stage = stage {}
 
   def deployConfig = [
@@ -38,7 +43,7 @@ class EcsServerGroupCreatorSpec extends Specification {
 
   def setup() {
     mockResolver = Stub(ArtifactUtils)
-    creator = new EcsServerGroupCreator(mockResolver)
+    creator = new EcsServerGroupCreator(mockResolver, oortService, contextParameterProcessor, new RetrySupport())
     stage.execution.stages.add(stage)
     stage.context = deployConfig
   }
