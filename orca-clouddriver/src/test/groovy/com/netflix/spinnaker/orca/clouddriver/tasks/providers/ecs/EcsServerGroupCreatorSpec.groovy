@@ -26,6 +26,7 @@ import static com.netflix.spinnaker.orca.test.model.ExecutionBuilder.stage
 
 class EcsServerGroupCreatorSpec extends Specification {
 
+
   @Subject
   ArtifactUtils mockResolver
   EcsServerGroupCreator creator
