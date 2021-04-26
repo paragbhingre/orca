@@ -18,6 +18,7 @@ package com.netflix.spinnaker.orca.clouddriver.tasks.providers.ecs
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.netflix.spinnaker.kork.artifacts.model.Artifact
+import com.netflix.spinnaker.kork.exceptions.ConfigurationException
 import com.netflix.spinnaker.orca.api.pipeline.models.StageExecution
 import com.netflix.spinnaker.orca.clouddriver.OortService
 import com.netflix.spinnaker.orca.clouddriver.tasks.servergroup.ServerGroupCreator
@@ -133,7 +134,11 @@ class EcsServerGroupCreator implements ServerGroupCreator, DeploymentDetailsAwar
     return { ->
       Response artifactText = oortService.fetchArtifact(artifact)
       try {
-        return yamlParser.get().loadAll(artifactText.getBody().in());
+        if(artifactText != null && artifactText.getBody() != null){
+          return yamlParser.get().loadAll(artifactText.getBody().in());
+        } else{
+          throw new ConfigurationException("Invalid artifact configuration or task definition artifact is null")
+        }
       } catch (Exception e) {
         throw new IllegalStateException(e);
       }
